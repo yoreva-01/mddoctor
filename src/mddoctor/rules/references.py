@@ -13,7 +13,7 @@ from mddoctor.rules.registry import register
 class UndefinedReference(Rule):
     code = "MDD030"
     name = "undefined-reference"
-    description = "A reference link ``[text][label]`` uses a label that has no definition."
+    description = "A reference link [text][label] uses a label that has no definition."
     severity = Severity.ERROR
 
     def check(self, doc: Document, ctx: Context) -> Iterator[Diagnostic]:

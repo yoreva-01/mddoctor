@@ -71,5 +71,5 @@ src = ["src", "tests"]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]
 
 [tool.mddoctor]
-# mddoctor lints its own documentation in CI.
-exclude = []
+# mddoctor lints its own documentation in CI. The examples are broken on purpose.
+exclude = ["examples/*"]
