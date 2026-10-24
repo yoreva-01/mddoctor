@@ -97,7 +97,7 @@ class BrokenAnchor(Rule):
 class EmptyLink(Rule):
     code = "MDD003"
     name = "empty-link"
-    description = "A link has an empty destination (``[text]()`` or ``[text](#)``)."
+    description = "A link has an empty destination: [text]() or [text](#)."
     severity = Severity.WARNING
 
     def check(self, doc: Document, ctx: Context) -> Iterator[Diagnostic]:
