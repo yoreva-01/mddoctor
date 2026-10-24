@@ -1,0 +1,2 @@
+# Marks this directory as its own project root, so running `mddoctor check` here
+# does not inherit the repository's `exclude = ["examples/*"]` setting.

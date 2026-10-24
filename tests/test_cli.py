@@ -202,3 +202,13 @@ def test_module_entry_point(tmp_path: Path) -> None:
     )
     assert completed.returncode == 1
     assert "MDD001" in completed.stdout
+
+
+def test_nearest_config_wins_over_parent_excludes(project: Path, capsys, monkeypatch) -> None:
+    write(project, ".mddoctor.toml", 'exclude = ["sub/*"]\n')
+    write(project, "sub/.mddoctor.toml", "")
+    write(project, "sub/a.md", "# A\n\n[x](gone.md)\n")
+    monkeypatch.chdir(project / "sub")
+    code, out, _ = run(capsys, "check")
+    assert code == 1
+    assert "MDD001" in out
