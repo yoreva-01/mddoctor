@@ -21,7 +21,7 @@ def load_document(path: Path) -> Document:
     """Read ``path`` as UTF-8 (a leading BOM is tolerated) and parse it."""
     resolved = path.resolve()
     try:
-        text = resolved.read_text(encoding="utf-8-sig")
+        text = resolved.read_bytes().decode("utf-8-sig")
     except UnicodeDecodeError as exc:
         raise DocumentLoadError(resolved, f"not valid UTF-8 ({exc.reason})") from exc
     except OSError as exc:
