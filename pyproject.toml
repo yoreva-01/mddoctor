@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mddoctor"
+dynamic = ["version"]
+description = "Offline Markdown docs linter: broken links and anchors, heading structure, fences, references, and a TOC generator."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Baldemar Aguirre" }]
+keywords = ["markdown", "lint", "documentation", "links", "toc"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Documentation",
+  "Topic :: Software Development :: Quality Assurance",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+mddoctor = "mddoctor.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/baldeaguirre/mddoctor"
+Issues = "https://github.com/baldeaguirre/mddoctor/issues"
+
+[tool.hatch.version]
+path = "src/mddoctor/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mddoctor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["mddoctor"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+
+[tool.mddoctor]
+# mddoctor lints its own documentation in CI.
+exclude = []
