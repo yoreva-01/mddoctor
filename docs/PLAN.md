@@ -119,7 +119,11 @@ mddoctor/
 
 ## Roadmap
 
-1. **v0.1** – MVP above.
-2. **v0.2** – `--fix`, SARIF output, setext headings.
-3. **v0.3** – opt-in external link checking, caching, parallelism.
-4. **v1.0** – stable rule IDs, rule docs, plugin entry points.
+Status legend: **done** = in the repository now, **planned** = tracked as a GitHub issue.
+
+| Release | Scope | Status |
+| --- | --- | --- |
+| v0.1 | Parser, 16 rules, `check` / `toc` / `rules` commands, config, suppression, text/json/github output, CI | done |
+| v0.2 | `--fix` for auto-fixable rules, SARIF output, Setext headings, case-exact path checks | planned |
+| v0.3 | Opt-in external link checking, parallel file processing, indented code block masking | planned |
+| v1.0 | Stable rule IDs, per-rule documentation pages, plugin entry points for third-party rules | planned |
