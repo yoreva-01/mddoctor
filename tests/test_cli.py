@@ -212,3 +212,21 @@ def test_nearest_config_wins_over_parent_excludes(project: Path, capsys, monkeyp
     code, out, _ = run(capsys, "check")
     assert code == 1
     assert "MDD001" in out
+
+
+def test_check_fix_trailing_whitespace_and_tabs(project: Path, capsys) -> None:
+    write(project, "README.md", "# Title   \n\nfoo\tbar\n")
+    code, out, _ = run(capsys, "check", "--fix")
+    assert "fixed:" in out
+    text = (project / "README.md").read_text(encoding="utf-8")
+    assert text == "# Title\n\nfoo    bar\n"
+    # re-lint is clean
+    code, out, _ = run(capsys, "check")
+    assert code == 0
+
+
+def test_check_fix_final_newline(project: Path, capsys) -> None:
+    write(project, "README.md", "# Title\n\n\n")
+    run(capsys, "check", "--fix")
+    text = (project / "README.md").read_text(encoding="utf-8")
+    assert text == "# Title\n"

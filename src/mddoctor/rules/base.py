@@ -38,6 +38,10 @@ class Rule:
     def check(self, doc: Document, ctx: Context) -> Iterator[Diagnostic]:
         raise NotImplementedError
 
+    def fix(self, doc: Document) -> str | None:
+        """Return rewritten document text when this rule can auto-correct, else None."""
+        return None
+
     def diagnostic(self, doc: Document, line: int, column: int, message: str) -> Diagnostic:
         return Diagnostic(
             path=doc.path,

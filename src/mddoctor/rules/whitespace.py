@@ -32,6 +32,25 @@ class TrailingWhitespace(Rule):
                 doc, index + 1, len(stripped) + 1, f"Trailing whitespace ({len(trailing)} chars)"
             )
 
+    def fix(self, doc: Document) -> str | None:
+        lines = list(doc.lines)
+        changed = False
+        for index, line in enumerate(lines):
+            if doc.in_fence[index]:
+                continue
+            stripped = line.rstrip(" \t")
+            trailing = line[len(stripped) :]
+            if not trailing:
+                continue
+            if trailing == "  " and stripped:
+                continue
+            lines[index] = stripped
+            changed = True
+        if not changed:
+            return None
+        eol = "\r\n" if "\r\n" in doc.text else "\n"
+        return eol.join(lines) + (eol if doc.ends_with_newline else "")
+
 
 @register
 class HardTab(Rule):
@@ -46,6 +65,19 @@ class HardTab(Rule):
                 yield self.diagnostic(
                     doc, index + 1, line.index("\t") + 1, "Hard tab character found"
                 )
+
+    def fix(self, doc: Document) -> str | None:
+        lines = list(doc.lines)
+        changed = False
+        for index, line in enumerate(lines):
+            if doc.in_fence[index] or "\t" not in line:
+                continue
+            lines[index] = line.replace("\t", "    ")
+            changed = True
+        if not changed:
+            return None
+        eol = "\r\n" if "\r\n" in doc.text else "\n"
+        return eol.join(lines) + (eol if doc.ends_with_newline else "")
 
 
 @register
@@ -65,3 +97,14 @@ class FinalNewline(Rule):
             )
         elif not doc.lines[-1].strip():
             yield self.diagnostic(doc, last, 1, "File ends with extra blank lines")
+
+    def fix(self, doc: Document) -> str | None:
+        if not doc.lines:
+            return None
+        lines = list(doc.lines)
+        while lines and not lines[-1].strip():
+            lines.pop()
+        if not lines:
+            return None
+        eol = "\r\n" if "\r\n" in doc.text else "\n"
+        return eol.join(lines) + eol

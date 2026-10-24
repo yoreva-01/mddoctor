@@ -9,6 +9,7 @@ from pathlib import Path
 from mddoctor.config import Config
 from mddoctor.documents import DocumentCache, DocumentLoadError
 from mddoctor.models import Diagnostic, Severity
+from mddoctor.parser import parse_document
 from mddoctor.rules import Context, Rule, all_rules
 from mddoctor.suppress import Suppressions
 
@@ -69,3 +70,48 @@ def lint_files(
 
     diagnostics.sort(key=Diagnostic.sort_key)
     return LintResult(diagnostics=diagnostics, files_checked=len(files))
+
+
+@dataclass
+class FixResult:
+    path: Path
+    changed: bool
+
+
+def apply_fixes(
+    files: Sequence[Path],
+    config: Config,
+    cache: DocumentCache | None = None,
+    rules: Sequence[Rule] | None = None,
+) -> list[FixResult]:
+    """Apply every rule's ``fix`` hook and rewrite files that changed (preserve CRLF/BOM)."""
+    import codecs
+
+    cache = cache or DocumentCache()
+    active = [r for r in (rules if rules is not None else all_rules()) if config.is_enabled(r.code)]
+    results: list[FixResult] = []
+
+    for file in files:
+        try:
+            raw = file.read_bytes()
+            text = raw.decode("utf-8-sig")
+        except (OSError, UnicodeDecodeError):
+            results.append(FixResult(path=file, changed=False))
+            continue
+        doc = cache.get(file)
+        current = text
+        for rule in active:
+            if rule.fix(doc) is None:
+                continue
+            # Re-parse after each fix so later rules see the new text.
+            doc = parse_document(file, current)
+            fixed = rule.fix(doc)
+            if fixed is not None:
+                current = fixed
+        if current == text:
+            results.append(FixResult(path=file, changed=False))
+            continue
+        prefix = codecs.BOM_UTF8 if raw.startswith(codecs.BOM_UTF8) else b""
+        file.write_bytes(prefix + current.encode("utf-8"))
+        results.append(FixResult(path=file, changed=True))
+    return results
