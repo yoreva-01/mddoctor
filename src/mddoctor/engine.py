@@ -76,6 +76,7 @@ def lint_files(
 class FixResult:
     path: Path
     changed: bool
+    fixes_applied: int = 0
 
 
 def apply_fixes(
@@ -99,19 +100,20 @@ def apply_fixes(
             results.append(FixResult(path=file, changed=False))
             continue
         doc = cache.get(file)
+        suppressions = Suppressions.from_document(doc)
         current = text
+        fixes_applied = 0
         for rule in active:
-            if rule.fix(doc) is None:
-                continue
-            # Re-parse after each fix so later rules see the new text.
             doc = parse_document(file, current)
-            fixed = rule.fix(doc)
+            suppressions = Suppressions.from_document(doc)
+            fixed = rule.fix(doc, suppressions)
             if fixed is not None:
                 current = fixed
+                fixes_applied += 1
         if current == text:
             results.append(FixResult(path=file, changed=False))
             continue
         prefix = codecs.BOM_UTF8 if raw.startswith(codecs.BOM_UTF8) else b""
         file.write_bytes(prefix + current.encode("utf-8"))
-        results.append(FixResult(path=file, changed=True))
+        results.append(FixResult(path=file, changed=True, fixes_applied=fixes_applied))
     return results

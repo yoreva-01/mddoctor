@@ -216,8 +216,8 @@ def test_nearest_config_wins_over_parent_excludes(project: Path, capsys, monkeyp
 
 def test_check_fix_trailing_whitespace_and_tabs(project: Path, capsys) -> None:
     write(project, "README.md", "# Title   \n\nfoo\tbar\n")
-    code, out, _ = run(capsys, "check", "--fix")
-    assert "fixed:" in out
+    code, out, err = run(capsys, "check", "--fix")
+    assert "Applied" in out or "fixed:" in err
     text = (project / "README.md").read_text(encoding="utf-8")
     assert text == "# Title\n\nfoo    bar\n"
     # re-lint is clean
@@ -230,3 +230,46 @@ def test_check_fix_final_newline(project: Path, capsys) -> None:
     run(capsys, "check", "--fix")
     text = (project / "README.md").read_text(encoding="utf-8")
     assert text == "# Title\n"
+
+def test_check_fix_preserves_crlf_and_bom(project: Path, capsys) -> None:
+    bom = b"\xef\xbb\xbf"
+    (project / "README.md").write_bytes(bom + b"# Title   \r\n\r\nok\r\n")
+    run(capsys, "check", "--fix")
+    raw = (project / "README.md").read_bytes()
+    assert raw.startswith(bom)
+    assert b"\r\n" in raw and b"# Title\r\n" in raw
+
+
+def test_check_fix_is_idempotent(project: Path, capsys) -> None:
+    write(project, "README.md", "# Title   \n\nfoo\tbar\n")
+    run(capsys, "check", "--fix")
+    first = (project / "README.md").read_bytes()
+    run(capsys, "check", "--fix")
+    assert (project / "README.md").read_bytes() == first
+
+
+def test_check_fix_skips_fenced_code(project: Path, capsys) -> None:
+    write(project, "README.md", "# T\n\n```\nkeep   \n```\n")
+    run(capsys, "check", "--fix")
+    text = (project / "README.md").read_text(encoding="utf-8")
+    assert "keep   " in text
+
+
+def test_check_fix_honours_suppressions(project: Path, capsys) -> None:
+    write(project, "README.md", "<!-- mddoctor-disable MDD040 -->\n# T   \n<!-- mddoctor-enable MDD040 -->\n")
+    run(capsys, "check", "--fix")
+    text = (project / "README.md").read_text(encoding="utf-8")
+    assert "# T   " in text
+
+
+def test_check_fix_blank_only_file(project: Path, capsys) -> None:
+    write(project, "README.md", "\n\n\n")
+    run(capsys, "check", "--fix")
+    assert (project / "README.md").read_text(encoding="utf-8") == ""
+
+
+def test_check_fix_json_is_valid_json(project: Path, capsys) -> None:
+    write(project, "README.md", "# Title   \n")
+    code, out, _ = run(capsys, "check", "--fix", "--format", "json")
+    import json
+    json.loads(out)

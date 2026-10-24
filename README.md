@@ -96,6 +96,7 @@ recursively, skipping `.git`, `node_modules`, virtualenvs, and similar folders.
 | `--ignore RULES` | Skip these rules |
 | `--format text\|json\|github` | Output format (default `text`) |
 | `--strict` | Treat warnings as failures (exit code 1) |
+| `--fix` | Auto-correct trailing whitespace, hard tabs, and final newline (skips fenced code and inline suppressions) |
 | `--config FILE` | Use a specific `.mddoctor.toml` or `pyproject.toml` |
 
 Exit codes: `0` clean (or warnings only), `1` problems found, `2` usage or configuration error.

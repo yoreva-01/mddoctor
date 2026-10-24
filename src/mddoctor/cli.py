@@ -63,9 +63,14 @@ def _cmd_check(args: argparse.Namespace) -> int:
         from mddoctor.engine import apply_fixes
 
         fixed = apply_fixes(files, config)
-        for item in fixed:
-            if item.changed:
-                print(f"fixed: {item.path}")
+        cwd = Path.cwd()
+        changed = [item for item in fixed if item.changed]
+        total_fixes = sum(item.fixes_applied for item in changed)
+        for item in changed:
+            # Structured formats own stdout; fix chatter goes to stderr.
+            print(f"fixed: {display_path(item.path, cwd)} ({item.fixes_applied} fix(es))", file=sys.stderr)
+        if args.format == "text" and total_fixes:
+            print(f"Applied {total_fixes} fix(es) across {len(changed)} file(s).")
     result = lint_files(files, config)
     output = FORMATTERS[args.format](result, Path.cwd())
     if output:
